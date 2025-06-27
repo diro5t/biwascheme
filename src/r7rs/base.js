@@ -468,59 +468,6 @@ libSchemeBase.exportMacro(Sym("unquote-splicing"), new JsErMacroTransformer(asyn
 
 // Note: parameterize is defined in expander/core.js
 
-// Threading macros (Clojure-style)
-libSchemeBase.exportMacro(Sym("->"), new JsErMacroTransformer(async (x, rename, compare) => {
-  // (-> value form1 form2 ...) 
-  // Thread value as first argument through each form
-  if (x.cdr === nil) {
-    throw new BiwaError("-> requires at least one argument");
-  }
-  
-  let forms = x.cdr.to_array();
-  let result = forms[0]; // Initial value
-  
-  for (let i = 1; i < forms.length; i++) {
-    let form = forms[i];
-    if (isSymbol(form)) {
-      // (symbol) -> (symbol result)
-      result = List(form, result);
-    } else if (isPair(form)) {
-      // (func args...) -> (func result args...)
-      result = new Cons(form.car, new Cons(result, form.cdr));
-    } else {
-      throw new BiwaError("-> form must be a symbol or list, got: " + to_write(form));
-    }
-  }
-  
-  return result;
-}));
-
-libSchemeBase.exportMacro(Sym("->>"), new JsErMacroTransformer(async (x, rename, compare) => {
-  // (->> value form1 form2 ...)
-  // Thread value as last argument through each form  
-  if (x.cdr === nil) {
-    throw new BiwaError("->> requires at least one argument");
-  }
-  
-  let forms = x.cdr.to_array();
-  let result = forms[0]; // Initial value
-  
-  for (let i = 1; i < forms.length; i++) {
-    let form = forms[i];
-    if (isSymbol(form)) {
-      // (symbol) -> (symbol result)
-      result = List(form, result);
-    } else if (isPair(form)) {
-      // (func args...) -> (func args... result)
-      result = new Cons(form.car, form.cdr.append(List(result)));
-    } else {
-      throw new BiwaError("->> form must be a symbol or list, got: " + to_write(form));
-    }
-  }
-  
-  return result;
-}));
-
 // 4.3 Macros
 // Note: define-syntax, syntax-error, let-syntax and letrec-syntax are defined in expander/core.js
 // TODO: syntax-rules(...) 

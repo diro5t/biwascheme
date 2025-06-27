@@ -185,6 +185,62 @@ define_syntax("or", function(x){
   return f;
 })
 
+// Threading macros (Clojure-style)
+define_syntax("->", function(x){
+  // (-> value form1 form2 ...) 
+  // Thread value as first argument through each form
+  if(x.cdr === nil){
+    throw new BiwaError("-> requires at least one argument");
+  }
+  
+  var forms = x.cdr.to_array();
+  var result = forms[0]; // Initial value
+  
+  for(var i = 1; i < forms.length; i++){
+    var form = forms[i];
+    if(isSymbol(form)){
+      // (symbol) -> (symbol result)
+      result = List(form, result);
+    } else if(isPair(form)){
+      // (func args...) -> (func result args...)
+      result = new Cons(form.car, new Cons(result, form.cdr));
+    } else {
+      throw new BiwaError("-> form must be a symbol or list, got: " + to_write(form));
+    }
+  }
+  
+  return result;
+})
+
+define_syntax("->>", function(x){
+  // (->> value form1 form2 ...)
+  // Thread value as last argument through each form  
+  if(x.cdr === nil){
+    throw new BiwaError("->> requires at least one argument");
+  }
+  
+  var forms = x.cdr.to_array();
+  var result = forms[0]; // Initial value
+  
+  for(var i = 1; i < forms.length; i++){
+    var form = forms[i];
+    if(isSymbol(form)){
+      // (symbol) -> (symbol result)
+      result = List(form, result);
+    } else if(isPair(form)){
+      // (func args...) -> (func args... result)
+      // Build a list that has result at the end
+      var args = form.cdr.to_array();
+      args.push(result);
+      result = new Cons(form.car, array_to_list(args));
+    } else {
+      throw new BiwaError("->> form must be a symbol or list, got: " + to_write(form));
+    }
+  }
+  
+  return result;
+})
+
 //            11.4.6  Binding constructs
 define_syntax("let", function(x){
   //(let ((a 1) (b 2)) (print a) (+ a b))

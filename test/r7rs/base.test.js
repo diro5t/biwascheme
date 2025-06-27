@@ -80,3 +80,53 @@ describe('11.5 Equivalence predicates', () => {
           (equal? z (list x x))))`).toEqual([true,true]);
   });
 })
+
+describe('Threading macros', () => {
+  describe('->', () => {
+    test('basic numeric threading', () => {
+      ev("(-> 5 (+ 3) (* 2) (- 1))").toBe(15);
+    });
+    
+    test('string threading', () => {
+      ew('(-> "hello" string-upcase (string-append " world"))')
+        .toBe('"HELLO world"');
+    });
+    
+    test('symbol forms', () => {
+      ev("(-> 5 abs)").toBe(5);
+      ev("(-> -3 abs)").toBe(3);
+    });
+    
+    test('single argument', () => {
+      ev("(-> 42)").toBe(42);
+    });
+    
+    test('nested expressions', () => {
+      ev("(-> 10 (- 3) (* 2) (+ 1))").toBe(15);
+    });
+  });
+  
+  describe('->>', () => {
+    test('basic numeric threading', () => {
+      ev("(->> 5 (+ 3) (* 2) (- 10))").toBe(-6);
+    });
+    
+    test('list operations', () => {
+      ew("(->> '(1 2 3) (map (lambda (x) (* x 2))) (filter (lambda (x) (> x 2))))")
+        .toBe("(4 6)");
+    });
+    
+    test('symbol forms', () => {
+      ev("(->> 5 abs)").toBe(5);
+      ev("(->> -3 abs)").toBe(3);
+    });
+    
+    test('single argument', () => {
+      ev("(->> 42)").toBe(42);
+    });
+    
+    test('nested expressions', () => {
+      ev("(->> 2 (+ 3) (* 2) (- 10))").toBe(0);
+    });
+  });
+})
